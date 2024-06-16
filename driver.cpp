@@ -64,9 +64,9 @@ int main(int argc, char *argv[]) {
       break;
     }
 
-  } while ((userCode = runUserChoice(choice)) == 400);
+  } while ((userCode = runUserChoice(choice)) == 400 || userCode == 100);
 
-  cout << "Thank you and see you next time!" << endl;
+  cout << endl << "Thank you and see you next time!" << endl;
 }
 
 bool emptyFileFunc() {
@@ -109,22 +109,23 @@ int getUserChoice() {
     cout << "Please enter your choice: ";
 
     std::cin >> command;
-    cout << endl;
     int command_val;
 
     try {
       command_val = stoi(command);
     } catch (std::invalid_argument e) {
-      cout << "Please enter a valid choice" << endl;
+      std::cerr << "Please enter a valid choice" << endl << endl;
       continue;
     }
 
     if (command_val <= 4 && command_val >= 1) {
       return command_val;
     } else {
-      cout << "Please enter a valid choice" << endl;
+      cout << "Please enter a valid choice" << endl << endl;
       continue;
     }
+
+    cout << endl;
 
   } while ("4" != command);
   return 4;
@@ -139,7 +140,7 @@ int runUserChoice(int choice) {
     return searchDataBank();
   } else {
     throw std::invalid_argument(
-        "error: choice was not 1 - 3 but reached 'runUserChoice' function.");
+        "Error: choice was not 1 - 3 but reached 'runUserChoice' function.");
   }
 }
 
@@ -150,7 +151,7 @@ int addWordToDataBank(void) {
   std::cin >> addendumWord;
   int error = checkValidWord(addendumWord);
 
-  // verifies the word the useri nputted is valid
+  // verifies the word the user inputted is valid
   while (error != 1) {
     cout << wordErrorMap[error] << endl << endl;
     cout << "What word would you like to add to the database? ";
@@ -168,22 +169,23 @@ int addWordToDataBank(void) {
     cerr << "Please enter a valid response (Y or N): ";
     std::cin >> response;
   }
-  cout << endl;
 
   if (toupper(response[0]) == 'N') {
     return 400;
   }
 
-  cout << "Adding one frequency for " << addendumWord << " to the databank."
+  cout << endl
+       << "Adding one frequency for " << addendumWord << " to the databank."
        << endl;
   wordFrequencyMap[addendumWord] = wordFrequencyMap[addendumWord] + 1;
   cout << "Total frequency for " << addendumWord << " is now "
-       << wordFrequencyMap[addendumWord] << endl;
+       << wordFrequencyMap[addendumWord] << endl
+       << endl;
 
   // TODO: WHEN EVERYTHING IS CONFIRMED WORKING, CHANGE TO ORIGINAL FILE
   commitChanges("test.txt");
 
-  return 0;
+  return 100;
 }
 
 void commitChanges(const string &file) {
@@ -211,12 +213,12 @@ int listWholeDataBank(void) {
 
   // begin to iterate over the frequency map
   //
-  // the basic idea is to create two vectors that mirror each other 
+  // the basic idea is to create two vectors that mirror each other
   // (just like a map) and then order one of them by frequency DESC
   // and keep the insert order on the other vector (to mirror the map)
   //
   // this is inefficient and a better way would be to somehow order the map
-  // based off the value before, or just not create an extra two vectors, 
+  // based off the value before, or just not create an extra two vectors,
   // but that's a post 9 hour plane ride problem
   for (auto it = wordFrequencyMap.begin(); it != wordFrequencyMap.end(); ++it) {
     string key = it->first;
@@ -242,16 +244,44 @@ int listWholeDataBank(void) {
     }
   }
 
+  cout << endl;
+
   // output the decomposed databank ordered on descending frequency
   for (int i = 0; i < words.size(); ++i) {
     cout << "The word \'" << words[i] << "\' has frequency "
          << indexingVector[i] << endl;
   }
 
-  return 1;
+  cout << endl;
+
+  return 100;
 }
 // option 3: search for a word
-int searchDataBank(void) { return 1; }
+int searchDataBank(void) {
+  std::string searchWord;
+  cout << "What word would you like to search for? ";
+  std::cin >> searchWord;
+  int error = checkValidWord(searchWord);
+
+  // verifies the word the user inputted is valid
+  while (error != 1) {
+    cout << wordErrorMap[error] << endl << endl;
+    cout << "What word would you like to search for? ";
+    std::cin >> searchWord;
+    error = checkValidWord(searchWord);
+  }
+  int frequency = wordFrequencyMap[searchWord];
+
+  cout << endl
+       << "Word \'" << searchWord << "\' has frequency " << frequency << endl
+       << endl;
+
+  if (frequency == 0) {
+    wordFrequencyMap.erase(searchWord);
+  }
+
+  return 100;
+}
 
 int checkValidWord(std::string string) {
   // 2 signifies the size of the word is less than 3
