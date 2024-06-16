@@ -6,8 +6,10 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
-using std::cout, std::endl, std::cerr, std::ofstream, std::ifstream;
+using std::cout, std::endl, std::cerr, std::ofstream, std::ifstream,
+    std::vector, std::string;
 
 const std::string BASE_FILE_NAME = "word_bank.txt";
 
@@ -41,6 +43,8 @@ int addWordToDataBank(void);
 int listWholeDataBank(void);
 // option 3: search for a word
 int searchDataBank(void);
+// commit any changes to the map that may have been made
+void commitChanges(const std::string &file);
 
 int main(int argc, char *argv[]) {
   // if file exists prompt user to add word or check contents (sorted desc)
@@ -55,7 +59,10 @@ int main(int argc, char *argv[]) {
   int userCode;
   int choice;
   do {
-  choice = getUserChoice();
+    choice = getUserChoice();
+    if (choice == 4) {
+      break;
+    }
 
   } while ((userCode = runUserChoice(choice)) == 400);
 
@@ -161,23 +168,88 @@ int addWordToDataBank(void) {
     cerr << "Please enter a valid response (Y or N): ";
     std::cin >> response;
   }
+  cout << endl;
 
   if (toupper(response[0]) == 'N') {
     return 400;
   }
 
+  cout << "Adding one frequency for " << addendumWord << " to the databank."
+       << endl;
   wordFrequencyMap[addendumWord] = wordFrequencyMap[addendumWord] + 1;
-  // actually get the word list and frequencies and add one for the addendumWord
-  // word
+  cout << "Total frequency for " << addendumWord << " is now "
+       << wordFrequencyMap[addendumWord] << endl;
 
-  for (auto [key, value] : wordFrequencyMap) {
-    cout << "key: " << key << " value: " << value << endl;
+  // TODO: WHEN EVERYTHING IS CONFIRMED WORKING, CHANGE TO ORIGINAL FILE
+  commitChanges("test.txt");
+
+  return 0;
+}
+
+void commitChanges(const string &file) {
+  ofstream writeStream(file);
+  string key;
+  string frequency;
+
+  for (auto it = wordFrequencyMap.begin(); it != wordFrequencyMap.end(); ++it) {
+    key = it->first;
+    writeStream.write(key.c_str(), key.size());
+    writeStream.put(',');
+    frequency = std::to_string(it->second);
+    writeStream.write(frequency.c_str(), frequency.size());
+    writeStream.put('\n');
+  }
+}
+
+// option 2: list whole databank ordered descending by frequency
+//
+// TODO: insanely inefficient but I'll try and refine this after i get off the
+// plane
+int listWholeDataBank(void) {
+  vector<string> words;
+  vector<int> indexingVector;
+
+  // begin to iterate over the frequency map
+  //
+  // the basic idea is to create two vectors that mirror each other 
+  // (just like a map) and then order one of them by frequency DESC
+  // and keep the insert order on the other vector (to mirror the map)
+  //
+  // this is inefficient and a better way would be to somehow order the map
+  // based off the value before, or just not create an extra two vectors, 
+  // but that's a post 9 hour plane ride problem
+  for (auto it = wordFrequencyMap.begin(); it != wordFrequencyMap.end(); ++it) {
+    string key = it->first;
+    int value = it->second;
+    int index = 0;
+    for (; index < indexingVector.size(); ++index) {
+      if (indexingVector[index] < value) {
+        auto numsIt = indexingVector.begin();
+        auto wordsIt = words.begin();
+        for (int i = 0; i < index; ++i) {
+          ++numsIt;
+          ++wordsIt;
+        }
+
+        indexingVector.insert(numsIt, value);
+        words.insert(wordsIt, key);
+        break;
+      }
+    }
+    if (index == indexingVector.size()) {
+      words.push_back(key);
+      indexingVector.push_back(value);
+    }
+  }
+
+  // output the decomposed databank ordered on descending frequency
+  for (int i = 0; i < words.size(); ++i) {
+    cout << "The word \'" << words[i] << "\' has frequency "
+         << indexingVector[i] << endl;
   }
 
   return 1;
 }
-// option 2: list whole databank
-int listWholeDataBank(void) { return 1; }
 // option 3: search for a word
 int searchDataBank(void) { return 1; }
 
@@ -222,7 +294,6 @@ void getWordBank(const std::string &fileName) {
   std::string currentNumber;
 
   while (getline(readFile, line, '\n')) {
-    cout << "line: " << line << endl;
     currentWord.clear();
     currentNumber.clear();
     bool delimFlag = false;
