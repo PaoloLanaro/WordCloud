@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cctype>
 #include <ctype.h>
 #include <fstream>
@@ -49,7 +48,6 @@ void commitChanges(const std::string &file);
 int main(int argc, char *argv[]) {
   // if file exists prompt user to add word or check contents (sorted desc)
   // if file doesn't exist prompt user to create file
-
   // starter func
   if (!emptyFileFunc()) {
     return 1;
@@ -189,17 +187,17 @@ int addWordToDataBank(void) {
 }
 
 void commitChanges(const string &file) {
-  ofstream writeStream(file);
+  ofstream fileStream(file);
   string key;
   string frequency;
 
   for (auto it = wordFrequencyMap.begin(); it != wordFrequencyMap.end(); ++it) {
     key = it->first;
-    writeStream.write(key.c_str(), key.size());
-    writeStream.put(',');
+    fileStream.write(key.c_str(), key.size());
+    fileStream.put(',');
     frequency = std::to_string(it->second);
-    writeStream.write(frequency.c_str(), frequency.size());
-    writeStream.put('\n');
+    fileStream.write(frequency.c_str(), frequency.size());
+    fileStream.put('\n');
   }
 }
 
@@ -220,6 +218,8 @@ int listWholeDataBank(void) {
   // this is inefficient and a better way would be to somehow order the map
   // based off the value before, or just not create an extra two vectors,
   // but that's a post 9 hour plane ride problem
+  // hello vro <3 - jrodan
+  // much love <3 - paolo
   for (auto it = wordFrequencyMap.begin(); it != wordFrequencyMap.end(); ++it) {
     string key = it->first;
     int value = it->second;
@@ -258,7 +258,7 @@ int listWholeDataBank(void) {
 }
 // option 3: search for a word
 int searchDataBank(void) {
-  std::string searchWord;
+  string searchWord;
   cout << "What word would you like to search for? ";
   std::cin >> searchWord;
   int error = checkValidWord(searchWord);
